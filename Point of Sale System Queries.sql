@@ -16,7 +16,7 @@ inner join sales_order_detail
 group by product_category_desc
 
 --3
-select item.item_upc, item.item_name, (qty_ordered * unit_cost - TotalSales) as TotalIncome
+select item.item_upc, item.item_name, (TotalSales - qty_ordered * unit_cost) as TotalIncome
 from
 (select item.item_upc, item_name, sum(sales_order_detail.unit_price * item_qty) as TotalSales
 from item
@@ -42,3 +42,55 @@ inner join discount_item
 group by item.item_upc, item_name, vendor_name --make sure vendor name doesn't ruin the group by
 
 --5
+select item_upc 
+from discount_item
+where '2020-01-12' between sale_start_date and sale_end_date
+
+--6
+select item_upc
+from sales_order_detail
+group by item_upc
+having count(*) =
+(select max(timespurchased) as MaxPurchased
+from
+(select item_upc, count(*) as TimesPurchased
+from sales_order_detail
+group by item_upc) as TimesPurchased)
+
+--7
+select emp_fname, emp_lname
+from employee
+inner join sales_order
+	on sales_order.cashier_id = employee.emp_id
+group by emp_fname, emp_lname
+having sum(total_sale) = 
+(select max(totalPurchased) as MaxPurchased
+from
+(select sum(total_sale) as totalPurchased
+from sales_order
+group by cashier_id) as totalPurchased)
+
+--8
+select vendor_id, count(distinct item_upc) as TotalItems
+from purchase_order
+inner join purchase_order_line
+	on PURCHASE_ORDER.Order_ID = PURCHASE_ORDER_LINE.Order_ID
+group by vendor_id
+
+--9
+select item.item_upc, item_name, vendor_name
+from item
+inner join purchase_order_line
+	on PURCHASE_ORDER_LINE.Item_UPC = item.Item_upc
+inner join purchase_order
+	on PURCHASE_ORDER_LINE.Order_ID = PURCHASE_ORDER.Order_ID
+inner join vendor
+	on PURCHASE_ORDER.Vendor_ID = vendor.vendor_id
+where Qty_In_Inventory < restock_level
+
+--10
+select item_name
+from item
+where unit_price =
+(select max(unit_price)
+from item)
