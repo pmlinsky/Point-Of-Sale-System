@@ -29,17 +29,19 @@ inner join purchase_order_line
 	on item.item_upc = purchase_order_line.item_upc
 
 --4
-select item.item_upc, item_name, vendor_name, count(sale_id) as NumSales
+select numSales.Item_UPC, item_name, vendor_name, NumSales
+from
+(select item.item_upc, item_name, count(sale_id) as NumSales
 from item
+inner join discount_item
+	on item.item_upc = discount_item.item_upc
+group by item.item_upc, item_name) as NumSales
 inner join purchase_order_line
-	on item.item_upc = purchase_order_line.item_upc
+	on numsales.item_upc = purchase_order_line.item_upc
 inner join purchase_order
 	on purchase_order_line.order_id = purchase_order.order_id
 inner join vendor
 	on purchase_order.vendor_id = vendor.vendor_id
-inner join discount_item
-	on item.item_upc = discount_item.item_upc
-group by item.item_upc, item_name, vendor_name --make sure vendor name doesn't ruin the group by
 
 --5
 select item_upc 
